@@ -66,6 +66,15 @@ FAMILY_NAMES = re.compile(r"(?i)\b(?:retif|sauthier)\b")  # names written in run
 # pseudonymous logins and nicks (arrakis, dake, wolf-rayet) do not count.
 # Example addresses of the sign-up and e-mail help pages: no person behind them, shown as written.
 EXAMPLE_ADDRESSES = {"login@citeweb.net", "toto@citeweb.net"}
+# Role addresses of the host (no person behind them), shown as written.
+ROLE_LOCALS = {"tech", "web", "plaintes", "pub", "webmaster", "webmestr", "beta"}
+ROLE_DOMAINS = ("citeweb.net", "ftd.fr")
+
+
+def is_public_address(m):
+    addr = m.group(0).lower()
+    return addr in EXAMPLE_ADDRESSES or (m.group(1).lower() in ROLE_LOCALS and m.group(2).lower().endswith(ROLE_DOMAINS))
+
 SURNAME_LOCALS = {"meisburg", "cbouthor", "treguy"}
 MEMBER_ENTRY = re.compile(r'(?is)liste des membres.*bgcolor="#C0C0C0"')  # real names in member lists
 
@@ -391,10 +400,10 @@ class Site:
             text = re.sub(r"(?is)(<body\b[^>]*>)", lambda m: m.group(1) + FORM_BANNER, text, count=1)
         # e-mails: mailto links removed by the link pass (kept as text), addresses masked
         text = re.sub(r"(?is)<a\b[^>]*href\s*=\s*\"?mailto:[^>]*>(.*?)</a\s*>", r"\1", text)
-        personal_mail = any(m.group(1).lower() in SURNAME_LOCALS for m in EMAIL.finditer(text))
+        personal_mail = any(m.group(1).lower() in SURNAME_LOCALS and not is_public_address(m) for m in EMAIL.finditer(text))
         if rel.startswith("automag/"):  # private classified ads: the whole address goes
             text = EMAIL.sub("????&#65312;????", text)
-        text = EMAIL.sub(lambda m: m.group(0) if m.group(0).lower() in EXAMPLE_ADDRESSES
+        text = EMAIL.sub(lambda m: m.group(0) if is_public_address(m)
                          else m.group(1) + "&#65312;????", text)
         # phone numbers (private ads, the old publicity contact): masked
         text = PHONE.sub(lambda m: m.group(1) + ".??.??.??.??", text)
