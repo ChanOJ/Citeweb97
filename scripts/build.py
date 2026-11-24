@@ -426,8 +426,10 @@ class Site:
             text = re.sub(r"(?is)<meta[^>]+refresh[^>]*>", "", text)
             text = re.sub(r"(?is)<body[^>]*>.*</body>", (
                 '<body bgcolor="#FFFFFF"><p><font face="Verdana" size="2">AUTOMAG was a member site of '
-                "CITEWEB. This page used to redirect to a site on mygale.org that no longer exists."
-                '</font></p><p><font face="Verdana" size="2"><a href="/">&lt; back to CITEWEB</a></font></p></body>'),
+                "CITEWEB. This page used to redirect to a site on mygale.org that no longer exists. "
+                'What was hosted here:</font></p><ul><li><font face="Verdana" size="2"><a href="/automag/dossier/dossier_main.html">Dossier</a> (report: the car industry in Russia)</font></li>'
+                '<li><font face="Verdana" size="2"><a href="/automag/annonces/annonces_main.html">Petites annonces</a> (classified ads, 1997)</font></li></ul>'
+                '<p><font face="Verdana" size="2"><a href="/">&lt; back to CITEWEB</a></font></p></body>'),
                 text, count=1)
         # server-side include leftovers and FrontPage alt texts
         text = re.sub(r"(?is)<!--\s*#include\b[^>]*-->", "", text)
