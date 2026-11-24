@@ -71,6 +71,7 @@ def main(argv=None):
             continue
         text = rd(build / rel)
         body = REMOVAL.sub("", text)
+        body = re.sub(r"(?i)\b(?:login|toto)@citeweb\.net\b", "", body)  # example addresses
         for label, rx in LEFTOVERS:
             if rx.search(body):
                 hits.setdefault(label, []).append(rel)
