@@ -44,6 +44,8 @@ DROP_FILES = {
     "news/serveur/compteur/index.ctw.htm",  # counter styles page: counters are not kept
     "news/serveur/compteur/example2.gif",
     "defcon/frames01.htm",  # frameset whose frames were never captured
+    "citeweb/contact.htm",  # same page as contact.ctw.htm (no link led to it)
+    "citeweb/sites.htm",  # same page as sites.ctw.htm (no link led to it)
 }
 # engine / binary / source files never published
 DROP_EXT = (".psd", ".dll", ".exe", ".bat", ".asp", ".inc", ".cgi")
@@ -51,6 +53,8 @@ DROP_EXT = (".psd", ".dll", ".exe", ".bat", ".asp", ".inc", ".cgi")
 ALIASES = {
     "citeweb/index.ctw.htm": "citeweb/index.htm",
     "citeweb/index-1.htm": "citeweb/index.htm",
+    "citeweb/contact.htm": "citeweb/contact.ctw.htm",
+    "citeweb/sites.htm": "citeweb/sites.ctw.htm",
     "citeweb": "citeweb/index.htm",
     "defcon/images/essai3.gif": "defcon/dessins/essai3.gif",
     "membres/membres.htm": "membres/index.htm",
@@ -78,10 +82,12 @@ def is_public_address(m):
     return addr in EXAMPLE_ADDRESSES or (m.group(1).lower() in ROLE_LOCALS and m.group(2).lower().endswith(ROLE_DOMAINS))
 
 SURNAME_LOCALS = {"meisburg", "cbouthor", "treguy"}
+# Nicks used as e-mail local parts: the address is shown in full (only family names get the domain masked).
+NICK_LOCALS = {"arrakis", "dake", "wolf-rayet", "wolf_rayet"}
 MEMBER_ENTRY = re.compile(r'(?is)liste des membres.*bgcolor="#C0C0C0"')  # real names in member lists
 
 REMOVAL_NOTE = (
-    '<div id="removal-note" style="clear:both;margin:28px auto 8px;padding:6px 8px 0;width:60%;'
+    '<div id="removal-note" style="clear:both;margin:28px auto 8px;padding:6px 8px 0;width:775px;max-width:96%;'
     'border-top:1px solid #808080;text-align:center;font:10px/14px Verdana,Arial,Helvetica,sans-serif;'
     'color:#808080;background:transparent">To be removed from this page, '
     '<a href="mailto:chandra_oj@pm.me" style="color:#808080;text-decoration:underline">contact me</a>.</div>'
@@ -98,6 +104,35 @@ HOME_NOTE = (
     "forms, logins and counters no longer work. Full list of the old sites: "
     '<a href="https://chanoj.github.io/" style="color:#606060">chanoj.github.io</a>.</div>'
 )
+# Pages that had no <title> (or "Untitled Document").
+TITLES = {
+    "citemag/index.htm": "CITEMAG - le magazine des utilisateurs de CITEWEB",
+    "citemag/editos.htm": "CITEMAG - editos croises",
+    "citemag/copie.htm": "CITEMAG - plagiat ou arnaque",
+    "citemag/greve.htm": "CITEMAG - les internautes en greve",
+    "citemag/perenoel/index.htm": "CITEMAG - interview du pere noel",
+    "citemag/everest/index.htm": "CITEMAG - a chacun son Everest",
+}
+# Served pages that no page linked to: a short list of links is added at the end of the page.
+EXTRA_LINKS = {
+    "citemag/index.htm": [("/citemag/greve.html", "Les internautes en gr&egrave;ve (7 d&eacute;cembre 98)"),
+                          ("/citemag/perenoel/", "Interview du p&egrave;re no&euml;l"),
+                          ("/citemag/everest/", "A chacun son Everest")],
+    "defcon/index.html": [("/defcon/main.html", "DefcoN Mag: pr&eacute;sentation")],
+}
+# The category list of the sites page was one dead link (c.htm); each line now leads to its CITENEWS directory.
+SITE_CATEGORIES = [
+    ("Cinema\r\net Television", "/news/cinetv/"), ("Science", "/news/science/"),
+    ("Politique et \xe9conomie", "/news/eco/"), ("Loisirs", "/news/loisirs/"),
+    ("Musique", "/news/musique/"), ("Informatique", "/news/info/"),
+    ("Art &amp; Culture", "/news/art/"), ("Pages personelles", "/news/perso/"),
+]
+# External links never kept: counters, search engines, intranet host names, server scripts.
+EXTERNAL_DENY = re.compile(r"(?i)echo\.fr/estat-jump|/cgi-bin/|cgi/jump\.dll|hornet\.org/cgi")
+
+PAGE_WIDTH = 800  # px: DefCoN, Citemag and AUTOMAG pages are limited to a centred 800 px column
+OJ_PAGES = {"credits", "links", "newjuice"}  # ojuice/e/<page> that exist in the OrangeJuice97 archive
+
 NOT_FOUND = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <html>
 <head>
@@ -217,8 +252,12 @@ class Site:
         """Virtual path -> published URL or None."""
         v = v.lower()
         v = ALIASES.get(v, v)
+        if v.startswith("ojuice/e/"):
+            name = v.rsplit("/", 1)[-1].split(".")[0]
+            if name in OJ_PAGES:  # same page exists in the OrangeJuice97 archive
+                return OJ + name + ".htm"
         if v.startswith("ojuice"):
-            return "/ojuice/"
+            return OJ
         cands = [v]
         if v == "" or v.endswith("/") or "." not in v.rsplit("/", 1)[-1]:
             base = v.rstrip("/")
@@ -233,7 +272,7 @@ class Site:
                 return u
         return None
 
-    def resolve(self, page, href, tppabs):
+    def resolve(self, page, href, tppabs, external=False):
         """Returns ('url', published URL) | ('mail', None) | ('drop', None)."""
         href = href.strip()
         low = href.lower()
@@ -241,6 +280,7 @@ class Site:
             return "mail", None
         if low.startswith(("javascript:", "#", "data:")):
             return ("keep", href) if low.startswith("#") else ("drop", None)
+        full = href
         frag = ""
         if "#" in href and not re.search(r"tppmsgs", low):
             href, _, frag = href.partition("#")
@@ -260,6 +300,11 @@ class Site:
                 return "url", href
             if "orange" in host or path_is_oj(u):
                 return "url", OJ
+            real = tppabs or full
+            if (external and "." in host and not host.endswith("citeweb.net")
+                    and not EXTERNAL_DENY.search(real) and not low.startswith("tppmsgs")
+                    and not ("tppmsgs" in low and not tppabs)):
+                return "url", real
             return "drop", None
         path = unquote(href.split("?", 1)[0])
         if path == "":
@@ -303,7 +348,7 @@ class Site:
             if not h:
                 return tag
             href = attr_value(h)
-            kind, val = self.resolve(rel, href, tppabs)
+            kind, val = self.resolve(rel, href, tppabs, external=True)
             if kind == "drop" and "tppmsgs" in href.lower():
                 c = re.search(r'(?i)coords\s*=\s*"?\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)', tag)
                 if c:
@@ -331,7 +376,7 @@ class Site:
                 out.append(tag)
                 unwrap.append(False)
                 continue
-            kind, val = self.resolve(rel, attr_value(h), tppabs)
+            kind, val = self.resolve(rel, attr_value(h), tppabs, external=True)
             if kind in ("url", "keep"):
                 out.append(HREF.sub(lambda mm: '%s"%s"' % (mm.group(1), val), tag, count=1))
                 out[-1] = re.sub(r"(?i)\s+target\s*=\s*(?:\"_top\"|_top)", "", out[-1])
@@ -381,9 +426,17 @@ class Site:
             text = re.sub(r"(?is)<meta[^>]+refresh[^>]*>", "", text)
             text = re.sub(r"(?is)<body[^>]*>.*</body>", (
                 '<body bgcolor="#FFFFFF"><p><font face="Verdana" size="2">AUTOMAG was a member site of '
-                "CITEWEB. This page used to redirect to a site on mygale.org that no longer exists."
-                '</font></p><p><font face="Verdana" size="2"><a href="/">&lt; back to CITEWEB</a></font></p></body>'),
+                "CITEWEB. This page used to redirect to a site on mygale.org that no longer exists. "
+                'What was hosted here:</font></p><ul><li><font face="Verdana" size="2"><a href="/automag/dossier/dossier_main.html">Dossier</a> (report: the car industry in Russia)</font></li>'
+                '<li><font face="Verdana" size="2"><a href="/automag/annonces/annonces_main.html">Petites annonces</a> (classified ads, 1997)</font></li></ul>'
+                '<p><font face="Verdana" size="2"><a href="/">&lt; back to CITEWEB</a></font></p></body>'),
                 text, count=1)
+        # server-side include leftovers and FrontPage alt texts
+        text = re.sub(r"(?is)<!--\s*#include\b[^>]*-->", "", text)
+        text = re.sub(r"(?i)(alt=\"[^\"]*?)\s*\(\d+ octets\)", r"\1", text)
+        if rel == "citeweb/sites.ctw.htm":
+            for label, url in SITE_CATEGORIES:
+                text = text.replace(label.replace("\n", "\n"), '<a href="%s">%s</a>' % (url, label), 1)
         # applets (live chat): note
         text = re.sub(r"(?is)<applet\b.*?</applet\s*>",
                       '<p><font face="Verdana" size="2"><em>(The live chat applet is not part of this archive.)</em></font></p>', text)
@@ -406,7 +459,7 @@ class Site:
         personal_mail = any(m.group(1).lower() in SURNAME_LOCALS and not is_public_address(m) for m in EMAIL.finditer(text))
         if rel.startswith("automag/"):  # private classified ads: the whole address goes
             text = EMAIL.sub("????&#65312;????", text)
-        text = EMAIL.sub(lambda m: m.group(0) if is_public_address(m)
+        text = EMAIL.sub(lambda m: m.group(0) if is_public_address(m) or m.group(1).lower() in NICK_LOCALS
                          else m.group(1) + "&#65312;????", text)
         # phone numbers (private ads, the old publicity contact): masked
         text = PHONE.sub(lambda m: m.group(1) + ".??.??.??.??", text)
@@ -420,14 +473,45 @@ class Site:
                 text = re.sub(r"(?i)(<head[^>]*>)", r'\1<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">', text, count=1)
             else:
                 text = '<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">\n' + text
+        if rel == "citemag/everest/index.htm":  # the CITEWEB logo after "avec" is not in the capture
+            text = re.sub(r"(?is)(avec<br>\s*)(</font>)(\s*</p>)", r'\1<b>CITEWEB</b>\2\3', text)
+        if rel in TITLES:
+            text = re.sub(r"(?is)<title>.*?</title>\s*", "", text)
+            text = re.sub(r"(?i)(<meta http-equiv=\"Content-Type\"[^>]*>)", lambda m: m.group(1) + "<title>%s</title>" % TITLES[rel], text, count=1)
         # footers
         add_removal = bool(rel in POSTAL_PAGES or (personal_mail and not rel.startswith("automag/")) or FAMILY_NAMES.search(text)
                            or MEMBER_ENTRY.search(text))
         if add_removal:
             text = self._append(text, REMOVAL_NOTE)
+        if rel in EXTRA_LINKS:
+            items = "".join('<li><a href="%s">%s</a></li>' % l for l in EXTRA_LINKS[rel])
+            text = self._append(text, '<ul style="font:11px Verdana,Arial,sans-serif">%s</ul>' % items)
         if rel == "citeweb/index.htm":
             text = self._append(text, HOME_NOTE)
+        if rel.startswith(("defcon/", "citemag/", "automag/")) and rel.endswith((".htm", ".html")):
+            text = self.centre(text)
         return text
+
+    @staticmethod
+    def centre(text):
+        """Centred column of PAGE_WIDTH px; a body background image moves to the column, the body colour stays outside."""
+        style = "max-width:%dpx;margin:0 auto" % PAGE_WIDTH
+        m = re.search(r"(?is)<body\b([^>]*)>", text)
+        if m:
+            attrs = m.group(1)
+            bg = re.search(r'(?i)\sbackground\s*=\s*"([^"]*)"', attrs)
+            if bg:
+                style += ";background-image:url('%s')" % bg.group(1)
+                attrs = re.sub(r'(?i)\sbackground\s*=\s*"[^"]*"', "", attrs)
+            text = text[:m.start()] + '<body%s><div id="page800" style="%s">' % (attrs, style) + text[m.end():]
+            end = list(re.finditer(r"(?is)</body\s*>", text))
+            if end:
+                return text[:end[-1].start()] + "</div>\n" + text[end[-1].start():]
+            return text + "\n</div>\n"
+        # fragment without <body> (Citemag): column opens after the <title>, closes at the end
+        m = re.search(r"(?is)</title>", text) or re.search(r"(?is)<meta[^>]*>", text)
+        pos = m.end() if m else 0
+        return text[:pos] + '<div id="page800" style="%s">' % style + text[pos:] + "\n</div>\n"
 
     @staticmethod
     def _append(text, note):
