@@ -1,0 +1,417 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.02 [en] (Win95; I) [Netscape]">
+   <META NAME="Author" CONTENT="Doctor Yes">
+   <TITLE>Defcon - Webmaster : Dr Yes</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#000000" LINK="#FFFFFF" VLINK="#551A8B" ALINK="#FF0000" BACKGROUND="/defcon/bord.jpg" NOSAVE>
+
+<CENTER><FONT COLOR="#FF0000"><FONT FACE="Verdana"><FONT SIZE=-1>LZW c'est
+cool... en francais, c'est mieux.</FONT></FONT></FONT></CENTER>
+
+<UL>
+<UL>
+<UL><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>La compression
+LZW est utilisee notamment par ZIP, GZIP, ARJ etc</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>LZW provient
+des initiales des 3 auteurs Lempel, Ziv et Welch.</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Par comparaison
+a RLE (Run Length Encoding), ou on code les r&eacute;p&eacute;titions identiques,
+(RLE: aaaaabbbbccc => 5a4b3c), LZW permet de coder des suites de caract&egrave;res
+non identiques.</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><U><FONT FACE="Verdana"><FONT SIZE=-1>1) Compression</FONT></FONT></U></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>k est un caractere
+(peu importe le nombre de bits, bitchar, par ex, 8) chaine est une chaine
+de caractere.</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>chaine = chaine
++ k signifie qu'on ajoute k a la fin de chaine, de m&ecirc;me "chaine=k"
+initialise chaine a k. (Par exemple: chaine="LZ", k='W', chaine+k="LZW")</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Je dis ca
+pour que l'algo ressemble un peu au C, un peu au pascal, un peu...</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Le dictionnaire
+est un tableau de chaines de caract&egrave;res, dont l'indice est cod&eacute;
+par un nombre de bits donne, ce nombre doit &ecirc;tre connu lors de la
+d&eacute;compression, c'est g&eacute;n&eacute;ralement 12 (bitindice).</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>nouveau est
+l'indice de la prochaine entr&eacute;e dans le dictionnaire.</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+1. Initialisation du dictionnaire</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for(nouveau=0; nouveau&lt;2^bitchar; nouveau++)</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+dictionnaire[nouveau]=nouveau;</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+/* pour bitinput = 8, dictionnaire = 0,1,2,3,4,...,254,255 */</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+2. Lecture du premier caractere: k</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Initialisation de chaine a ce caractere, chaine = k</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+3. Tant que (Lecture caractere suivant: k) &lt;---+</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp; 4. Si (chaine+k &macr; dictionnaire) alors&nbsp; |</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp; chaine = chaine + k&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp; GOTO 3&nbsp; /* bourk
+*/ -----------+</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Fsi</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp; 5. ecriture du code correspondant a chaine</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp; cad du rang de chaine dans le dictionnaire</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp; sur le nombre de bits voulu (bintindice)</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp; ex: chaine="pipo", tableau[359]="pipo" => ecr de 359</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp; 6. dictionnaire[nouveau++] = chaine+k</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp; 7. chaine = k</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Ftque</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+8. &eacute;criture du code correspondant a chaine cad du rang de chaine
+dans le dictionnaire sur le nombre de bits voulu</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(bintindice)</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><U><FONT FACE="Verdana"><FONT SIZE=-1>1.1) Exemple:</FONT></FONT></U></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1><U>Fichier
+entree&nbsp;</U>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<U>Chaine reconnue</U>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<U>Dictionnaire</U></FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>LZWLZ78LZ77LZCLZMWLZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZ&nbsp;&nbsp; (=256)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;ZWLZ78LZ77LZCLZMWLZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Z&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ZW&nbsp;&nbsp; (=257)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp; WLZ78LZ77LZCLZMWLZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+W&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+WL&nbsp;&nbsp; (=258)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; LZ78LZ77LZCLZMWLZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZ7&nbsp; (=259)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; 78LZ77LZCLZMWLZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+7&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+78&nbsp;&nbsp; (=260)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 8LZ77LZCLZMWLZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8L&nbsp;&nbsp; (=261)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LZ77LZCLZMWLZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZ7&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZ77 (=262)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+7LZCLZMWLZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+7&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+7L&nbsp;&nbsp; (=263)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZCLZMWLZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZC&nbsp; (=264)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+CLZMWLZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+C&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+CL&nbsp;&nbsp; (=265)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZMWLZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZM&nbsp; (=266)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+MWLZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+M&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+MW&nbsp;&nbsp; (=267)</TT></FONT>
+<BR><TT><FONT COLOR="#FFFFFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+WLZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+WL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+WLZ&nbsp; (=268)</FONT></TT><FONT COLOR="#FFFFFF"></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ZAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Z&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ZA&nbsp;&nbsp; (=269)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+AP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+AP&nbsp;&nbsp; (=270)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+P&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; P</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; Sortie: L Z W &lt;256>
+78 &lt;259> 7 &lt;256> C &lt;256> M &lt;258> Z A P</TT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>1.2) Remarques</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>--------------</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;* si
+chaine+k &macr; dictionnaire alors chaine &macr; dictionnaire</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;* la
+recherche de l'appartenance de chaine au dictionnaire est lourde (4.)</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;* on
+peut depasser le nombre d'entree du dictionnaire => boum GIF implemente
+une variante pour corriger ca, on reserve les deux premieres entrees du
+dictionnaires apres l'initialisation</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>pour deux
+codes speciaux: fin de fichier, et RAZ ( on r&eacute;initialise le dictionnaire
+et on recommence )</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>2) Decompression</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>----------------</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>old et code
+sont deux indices, sur bitindice bits (cf compression)</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Donc les lectures
+se font sur bitindice bits (generalement 12),</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>c'est &agrave;
+dire qu'il faut gerer soit meme le flux des des donn&eacute;es en entr&eacute;e.</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+1. Initialisation de la table</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for(nouveau=0; nouveau&lt;2^bitchar; nouveau++)</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+dictionnaire[nouveau]=nouveau;</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+2. Lecture ( code )</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+3. Ecriture de dictionnaire[code]</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+4. old = code</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+5. Tant que (lecture code suivant)</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp; 6. Si (code &lt; nouveau) /* code &macr; dictionnaire
+? */</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; ecriture(dictionnaire[code]);</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; chaine = dictionnaire[old];</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; k = dictionnaire[code][0];</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; dictionnaire[max++]
+= chaine+k;</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Sinon /* cas ennuyeux voir 3.3 */</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; chaine = dictionnaire[old];</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; k = chaine[0];</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; ecriture(chaine+k);</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; dictionnaire[nouveau++]
+= chaine+k;</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Fsi</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp; 7. old = code</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Ftque</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><U><FONT FACE="Verdana"><FONT SIZE=-1>2.2) Exemple:</FONT></FONT></U></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>C = premier
+caractere du code (suivant).</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1><U>Code suivant</U>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<U>C</U>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <U>Dictionnaire</U>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<U>Ecriture</U></FONT></TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+L</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; Z&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Z&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LZ&nbsp;&nbsp; (=256)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Z</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; W&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+W&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ZW&nbsp;&nbsp; (=257)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+W</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp; &lt;256>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WL&nbsp;&nbsp; (=258)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZ</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; 7&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+7&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LZ7&nbsp; (=259)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+7</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; 8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 78&nbsp;&nbsp; (=260)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp; &lt;259>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 8L&nbsp;&nbsp; (=261)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZ7</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; 7&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+7&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LZ77 (=262)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+7</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp; &lt;256>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 7L&nbsp;&nbsp; (=263)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZ</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; C&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+C&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LZC&nbsp; (=264)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+C</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp; &lt;256>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CL&nbsp;&nbsp; (=265)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LZ</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; M&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+M&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LZM&nbsp; (=266)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+M</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp; &lt;258>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+W&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MW&nbsp;&nbsp; (=267)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+WL</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; Z&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Z&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WLZ&nbsp; (=268)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Z</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ZA&nbsp;&nbsp; (=269)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; P&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+P&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AP&nbsp;&nbsp; (=270)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+P</FONT></TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Sortie: L Z W LZ 7 8 LZ7 7 LZ C LZ M WL W A P</FONT></TT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><U><FONT FACE="Verdana"><FONT SIZE=-1>2.3) Cas
+ennuyeux</FONT></FONT></U></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Ce cas se produit
+lors de la compression de chaines de type</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>k[...]k[...]k.</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Exemple la
+chaine: APAPAPAPAP</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Compression:</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1><U>Entree</U>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<U>Chaine reconnue&nbsp;</U>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<U>Dictionnaire</U></FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><TT><FONT COLOR="#FFFFFF">APAPAPAPAPAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+AP&nbsp;&nbsp;&nbsp; (=256)</FONT></TT><FONT COLOR="#FFFFFF"></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;PAPAPAPAPAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+P&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PA&nbsp;&nbsp;&nbsp; (=257)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp; APAPAPAPAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+AP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+APA&nbsp;&nbsp; (=258)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; APAPAPAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+APA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+APAP&nbsp; (=259)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PAPAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PAP&nbsp;&nbsp; (=260)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PAP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PAP</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Sortie: A P &lt;256> &lt;258> &lt;257> &lt;260></FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Decompression:</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+<U>Entree</U>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<U>C</U>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<U>Dictionnaire</U>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<U>Ecriture</U></FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; P&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+P&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AP&nbsp;&nbsp;
+(=256)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; P</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; &lt;256>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PA&nbsp;&nbsp;
+(=257)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AP</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; &lt;258>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+???</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><TT><FONT COLOR="#FFFFFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; APA&nbsp;
+(=258)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; APA</FONT></TT><FONT COLOR="#FFFFFF"></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; &lt;257>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+P&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; APAP
+(=259)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PA</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; &lt;260>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+???</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+P&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PAP&nbsp;
+(=260)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PAP</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Sortie: A P AP APA PA PAP</TT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+aLgoL / Psykotrope PC</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT FACE="Verdana"><FONT COLOR="#FFFFFF"><FONT SIZE=-1>Il y a pas
+mal de textes qui traitent de ce sujet sur le Net, mais pas trop en francais...</FONT></FONT></FONT></UL>
+</UL>
+</UL>
+
+</BODY>
+</HTML>
