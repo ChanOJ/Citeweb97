@@ -58,6 +58,8 @@ ALIASES = {
 }
 
 NOTE_DEPT = " (not part of this archive)"
+# Pages whose frozen form is only a search box or an empty sign-up stub: no banner.
+NO_BANNER = {"citeweb/index.htm", "citeweb/sites.htm", "citeweb/sites.ctw.htm", "citeweb/new.htm", "citeweb/new.ctw.htm"}
 # The removal footer goes only on pages that show a family name, a full postal address or an
 # e-mail with its local part in clear (local＠???? counts); never on pages with nicks only.
 POSTAL_PAGES = {"citeweb/contact.htm", "citeweb/contact.ctw.htm"}  # street address of the host company
@@ -397,7 +399,8 @@ class Site:
             text = re.sub(r"(?is)<input\b[^>]*type\s*=\s*\"?hidden\"?[^>]*>", "", text)
             text = re.sub(r"(?is)<(input|select|textarea)\b", r"<\1 disabled", text)
             text = re.sub(r"(?i)(<input\b[^>]*?)\s+value\s*=\s*(?:\"[^\"]*\"|'[^']*'|[^\s>]+)", r"\1", text)
-            text = re.sub(r"(?is)(<body\b[^>]*>)", lambda m: m.group(1) + FORM_BANNER, text, count=1)
+            if rel not in NO_BANNER:
+                text = re.sub(r"(?is)(<body\b[^>]*>)", lambda m: m.group(1) + FORM_BANNER, text, count=1)
         # e-mails: mailto links removed by the link pass (kept as text), addresses masked
         text = re.sub(r"(?is)<a\b[^>]*href\s*=\s*\"?mailto:[^>]*>(.*?)</a\s*>", r"\1", text)
         personal_mail = any(m.group(1).lower() in SURNAME_LOCALS and not is_public_address(m) for m in EMAIL.finditer(text))
