@@ -130,7 +130,7 @@ SITE_CATEGORIES = [
 # External links never kept: counters, search engines, intranet host names, server scripts.
 EXTERNAL_DENY = re.compile(r"(?i)echo\.fr/estat-jump|/cgi-bin/|cgi/jump\.dll|hornet\.org/cgi")
 
-PAGE_WIDTH = 800  # px: DefCoN and Citemag pages are limited to a centred 800 px column
+PAGE_WIDTH = 800  # px: DefCoN, Citemag and AUTOMAG pages are limited to a centred 800 px column
 OJ_PAGES = {"credits", "links", "newjuice"}  # ojuice/e/<page> that exist in the OrangeJuice97 archive
 
 NOT_FOUND = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
@@ -488,7 +488,7 @@ class Site:
             text = self._append(text, '<ul style="font:11px Verdana,Arial,sans-serif">%s</ul>' % items)
         if rel == "citeweb/index.htm":
             text = self._append(text, HOME_NOTE)
-        if rel.startswith(("defcon/", "citemag/")) and rel.endswith((".htm", ".html")):
+        if rel.startswith(("defcon/", "citemag/", "automag/")) and rel.endswith((".htm", ".html")):
             text = self.centre(text)
         return text
 
