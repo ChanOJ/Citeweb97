@@ -1,6 +1,6 @@
 # Citeweb97
 
-**CITEWEB, as it was in 1997.** CITEWEB was a French free web host (1996-1999, sold in 1999): free sites of up to 20 MB, e-mail, forums and a members' newspaper. This archive keeps the 1997 site: presentation and rules, CITENEWS, the forums page, the members' directory (logins and names, no passwords, no e-mail addresses), the WebTrends statistics, and the sites it hosted at their original paths: DefCoN (`/defcon/`), .rIBBON! (`/ribbon/`), Citemag (`/citemag/`), AUTOMAG. Orange Juice 1997 has its own archive: https://orangejuice97.sauthier.family
+**CITEWEB, as it was in 1997.** CITEWEB was a French free web host (1996-1999, sold in 1999): free sites of up to 20 MB, e-mail, forums and a members' newspaper. This archive keeps the 1997 site: presentation and rules, CITENEWS, the forums page, the members' directory (logins and names, no passwords), the WebTrends statistics, and the sites it hosted at their original paths: DefCoN (`/defcon/`), .rIBBON! (`/ribbon/`), Citemag (`/citemag/`), AUTOMAG (dossier and classified ads, linked from `/automag/`). Orange Juice 1997 has its own archive: https://orangejuice97.sauthier.family
 
 Archive of an old static website, served from bunny.net at the hostname
 of [`site.json`](site.json). Kept online for history, no longer developed.
@@ -15,11 +15,11 @@ Full list of the sites: https://chanoj.github.io/
 ./publish.sh
 ```
 
-It runs `scripts/build.py` (lowercase names, `.htm` -> `.html`, `tppabs` attributes removed, links rewritten, dead links turned into plain text, forms frozen, e-mail addresses masked as `local＠????`, ages, postcodes, phone numbers and visitor host names removed, member lists by département left out), `scripts/seo.py` (`robots.txt`, `sitemap.xml`), `scripts/verify_build.py` and `scripts/check_excludes.py`. It never deploys: merging to `main` does, through GitHub Actions.
+It runs `scripts/build.py` (lowercase names, `.htm` -> `.html`, `tppabs` attributes removed, links rewritten, dead internal links turned into plain text, external links kept as in the original except counters, search engines and server scripts, forms frozen, e-mail addresses of family names masked as `local＠????` while nicks and role addresses stay in clear, ages, postcodes, phone numbers and visitor host names removed, member lists by département left out; DefCoN, Citemag and AUTOMAG pages in a centred 800 px column; orphan pages linked from their section index), `scripts/seo.py` (`robots.txt`, `sitemap.xml`, 124 URLs, every published page), `scripts/verify_build.py` and `scripts/check_excludes.py`. It never deploys: merging to `main` does, through GitHub Actions.
 
 Never published: engine code (`.asp`, `.inc`, `.dll`, `.exe`), counters, the 1998 redesign (its own archive), anything not in the 1997 capture.
 
-Pages that list people end with "To be removed from this page, contact me."
+Pages that show a family name, a full postal address or an e-mail whose local part is a family name end with "To be removed from this page, contact me."
 
 ## Layout
 
