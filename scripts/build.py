@@ -130,6 +130,7 @@ SITE_CATEGORIES = [
 # External links never kept: counters, search engines, intranet host names, server scripts.
 EXTERNAL_DENY = re.compile(r"(?i)echo\.fr/estat-jump|/cgi-bin/|cgi/jump\.dll|hornet\.org/cgi")
 
+PAGE_WIDTH = 800  # px: DefCoN and Citemag pages are limited to a centred 800 px column
 OJ_PAGES = {"credits", "links", "newjuice"}  # ojuice/e/<page> that exist in the OrangeJuice97 archive
 
 NOT_FOUND = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
@@ -256,7 +257,7 @@ class Site:
             if name in OJ_PAGES:  # same page exists in the OrangeJuice97 archive
                 return OJ + name + ".htm"
         if v.startswith("ojuice"):
-            return "/ojuice/"
+            return OJ
         cands = [v]
         if v == "" or v.endswith("/") or "." not in v.rsplit("/", 1)[-1]:
             base = v.rstrip("/")
@@ -470,6 +471,8 @@ class Site:
                 text = re.sub(r"(?i)(<head[^>]*>)", r'\1<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">', text, count=1)
             else:
                 text = '<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">\n' + text
+        if rel == "citemag/everest/index.htm":  # the CITEWEB logo after "avec" is not in the capture
+            text = re.sub(r"(?is)(avec<br>\s*)(</font>)(\s*</p>)", r'\1<b>CITEWEB</b>\2\3', text)
         if rel in TITLES:
             text = re.sub(r"(?is)<title>.*?</title>\s*", "", text)
             text = re.sub(r"(?i)(<meta http-equiv=\"Content-Type\"[^>]*>)", lambda m: m.group(1) + "<title>%s</title>" % TITLES[rel], text, count=1)
@@ -483,10 +486,30 @@ class Site:
             text = self._append(text, '<ul style="font:11px Verdana,Arial,sans-serif">%s</ul>' % items)
         if rel == "citeweb/index.htm":
             text = self._append(text, HOME_NOTE)
-        if rel.startswith("defcon/") and rel.endswith((".htm", ".html")) and re.search(r"(?i)<body\b", text):
-            text = re.sub(r"(?is)(<body\b[^>]*>)", r'\1<div id="page800" style="max-width:800px;margin:0 auto">', text, count=1)
-            text = self._append(text, "</div>")
+        if rel.startswith(("defcon/", "citemag/")) and rel.endswith((".htm", ".html")):
+            text = self.centre(text)
         return text
+
+    @staticmethod
+    def centre(text):
+        """Centred column of PAGE_WIDTH px; a body background image moves to the column, the body colour stays outside."""
+        style = "max-width:%dpx;margin:0 auto" % PAGE_WIDTH
+        m = re.search(r"(?is)<body\b([^>]*)>", text)
+        if m:
+            attrs = m.group(1)
+            bg = re.search(r'(?i)\sbackground\s*=\s*"([^"]*)"', attrs)
+            if bg:
+                style += ";background-image:url('%s')" % bg.group(1)
+                attrs = re.sub(r'(?i)\sbackground\s*=\s*"[^"]*"', "", attrs)
+            text = text[:m.start()] + '<body%s><div id="page800" style="%s">' % (attrs, style) + text[m.end():]
+            end = list(re.finditer(r"(?is)</body\s*>", text))
+            if end:
+                return text[:end[-1].start()] + "</div>\n" + text[end[-1].start():]
+            return text + "\n</div>\n"
+        # fragment without <body> (Citemag): column opens after the <title>, closes at the end
+        m = re.search(r"(?is)</title>", text) or re.search(r"(?is)<meta[^>]*>", text)
+        pos = m.end() if m else 0
+        return text[:pos] + '<div id="page800" style="%s">' % style + text[pos:] + "\n</div>\n"
 
     @staticmethod
     def _append(text, note):
