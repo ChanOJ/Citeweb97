@@ -1,0 +1,22 @@
+# Files that must NOT be published (relative to site/; no '/' = basename anywhere; '*' crosses '/').
+# Read by scripts/check_excludes.py and scripts/verify_build.py.
+.DS_Store
+Thumbs.db
+*.log
+# engine code and binaries of the old server
+*.asp
+*.inc
+*.dll
+*.exe
+*.bat
+*.cgi
+*.psd
+*.zip
+# never published: the Pyromania pages, the 1998 redesign (own archive), Teleport Pro messages
+petard/*
+pyromania/*
+site/*
+tppmsgs/*
+# credentials, visitor data
+*passw*
+*logins*

@@ -1,0 +1,512 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.02 [en] (Win95; I) [Netscape]">
+   <META NAME="Author" CONTENT="Doctor Yes">
+   <TITLE>Defcon - Webmaster : Dr Yes</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#000000" LINK="#FFFFFF" VLINK="#551A8B" ALINK="#FF0000" BACKGROUND="/defcon/bord.jpg" NOSAVE>
+
+<CENTER><TT><FONT COLOR="#FF0000">Watcom Tutoriol</FONT></TT></CENTER>
+
+<UL>
+<UL>
+<UL><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Pourquoi fait-je cela ? parce que j'me fais
+chier !</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Mon but n'est pas ici de faire un cours de
+C mais plut&ocirc;t d'expliquer sommairement le fonctionnement d'un Programme
+DOS 32 bits. C'est con, mais perso j'ai eu un peu de mal &agrave; trouver
+des infos sur le Mode prot&eacute;g&eacute; des 80386, 486 , et autres
+Tethatiums like. (C vrai que j'avais pas Internet &agrave; l'&eacute;poque,
+mais bon ...)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT><U>1 -&nbsp; What is da principe ?</U></TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Si vous avez quelques difficult&eacute;s avec
+l'organisation m&eacute;moire du PC je vais vous &eacute;claircir une ch'touille.
+Le mode natif dont dispose tout processeur 80x86 (celui dans lequel il
+se trouve au</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>d&eacute;marrage) est le mode R&eacute;el
+: Votre machine est ici dans un adressage (m&eacute;moire) segment&eacute;.
+Une adresse est compos&eacute; d'un segment et d'un offset :</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>ex: DS:SI</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Les registres de segments (ES, DS, SS, CS,
+FS, GS) et d'offset (SI, DI, IP, SP, BP) sont tout des registres 16 bits
+mais avec une particularit&eacute; :</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Une adresse en m&eacute;moire se code sur
+20 bits :</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
++----------------+&nbsp;&nbsp; +---------------+</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;Registre Segment&brvbar; : &brvbar;Registre Offset&brvbar;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
++----------------+&nbsp;&nbsp; +---------------+</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp; bits&nbsp;&nbsp;&nbsp; 19&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+3&nbsp;&nbsp; 15&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>C'est donc bien mais pas top : on peut acceder
+jusqu'a 1 Mo de m&eacute;moire et y'a plein d'autres probl&egrave;mes tous
+plus chiant les un que les autres...</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>A partir du 80286 un type d'Intel qui gueulait
+plus fort que les autres (Et qui avait aussi plus de pouvoir que les autres
+:) ) &agrave; d&eacute;cid&eacute; de d&eacute;velloper le processeur x86
+en le dotant d'un nouveau</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>systeme de gestion de m&eacute;moire. Lorsque
+le 286 est sortie cela n'&eacute;tait pas encore au point mais le principe
+&eacute;tait lanc&eacute; : Plus de m&eacute;moire et pis machin 'titache
+(M'titache ..... y'a des cons</TT></FONT>
+<BR><TT><FONT COLOR="#FFFFFF">j'vous jure). Bref d&egrave;s le 386 &ccedil;a
+y'est y sont content y ont sorti un machin rigolo &agrave; 100 patates
+(D'ailleurs 10 ans apr&egrave;s c'est toujours la m&ecirc;me chose) mais
+comment ke ca marche ??? est-ce que les registres deviennent bleus ? est-ce
+que ca fera toujours Bip quand on fera Reset ??????????????????????</FONT></TT><FONT COLOR="#FFFFFF"></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>==>&nbsp; Tant de questions qui restaient
+sans r&eacute;ponse !!!</TT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT><U>2 - Des R&eacute;ponses !</U></TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>D&eacute;ja premi&egrave;re constatation:
+les registres de votre bidule silicon&eacute; favorie (Non pas le bidule
+qui fait du 115 E, l'autre) ont chang&eacute;:</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>les registres d'accumulateurs et d'offset
+passent &agrave; 32 bits :</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+EAX,EBX,ECX,EDX,ESI,EDI,EBP,ESP,EIP</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Ba c cool mais pourquoi ?</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Bicause il y a un nouveau mode de gestion
+de m&eacute;moire ke l'on appelle ......... THE MODE PROTEGE ..... (Musique
+dramatique et effet d'ambiance) Non ? si !</TT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT><U>3 - DA Modez Protegez</U></TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Tr&eacute;s sommairement voila de quoi il
+en retourne :</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Il existe 2 types de mod&egrave;le m&eacute;moire
+:</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; - Le mod&egrave;le FLAT o&ugrave;
+vous avez un espace adressable unique de 4 Go (utilis&eacute; pour le flat
+realmode)</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; - Le mod&egrave;le "segment&eacute;"</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Le mod&egrave;le segment&eacute; est d&eacute;riv&eacute;
+du mod&egrave;le FLAT voici comment cela fonctionne :</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>Lorsque vous adressez la m&eacute;moire vous
+n'avez plus 1 Mo de limite mais 4 Go (Wahouuuuuuu) - adresse 32 bits. Mais
+cela d'une facon un peu sp&eacute;ciale. Voila un pointeur en m&eacute;moire
+:</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; DS:ESI</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>DS contient un nombre zoli et rigolo tandis
+que ESI contient un nombre cod&eacute; sur 32 bits</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Bon sang mais pourquoi ???????????????????!!!!!!!!!!!!</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Le nombre contenu dans le registre de segment
+bah en fait il va r&eacute;f&eacute;rencer un s&eacute;l&eacute;cteur.
+Un s&eacute;l&eacute;cteur est un nombre qui pointe sur un descripteur
+de segment.</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Un descripteur de segment k&eacute;zako ?
+(D&eacute;sol&eacute; mais je fait ca de t&ecirc;te&nbsp; alors si j'oublie
+des trucs c normal)</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>C'est une structure qui d&eacute;finit dans
+un espace m&eacute;moire virtuel de&nbsp; 46 TeraOctet (32 bits d'adressage
++ 16384 selecteurs possibles):</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; 1 - Une adresse de base
+(dans la m&eacute;moire physique 4Go)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; 2 - Une limite</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; 3 - Des droits d'acces</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&brvbar; L'adresse de base donne l'adresse
+Physique &agrave; laquelle commence le segment.</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&brvbar; La limite est la taille du segment.</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&brvbar; Les droits d'acc&eacute;s fixe les
+autorisations de Lecture/Ecriture sur le segment suivant votre nivo de
+privil&egrave;ge. (On verra plus tard comment modifier ses valeurs)</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Si vous ne pigez pas un traitre mot de tout
+cela, voici un petit exemple:</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; DS = 240h</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; ESI = 00000000</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>DS r&eacute;f&eacute;rence le descripteur
+240h or si on se reporte &agrave; notre table de descripteurs on peut s'apercevoir
+que le descripteur 240h poss&egrave;de les attributs suivant:</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; Base adress : 000A0000h</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; Limit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: 64 Ko</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; Droits&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Lecture / &eacute;criture</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Cela veut dire que l'adresse point&eacute;e
+par DS:ESI (240:00000000) est&nbsp; physiquement en 000A0000h !</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;Adresse physique&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Adresse segment&eacute;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; 000AFFFFh&nbsp;&nbsp;&nbsp;
+&brvbar;_fin_de_segm___&brvbar; 240 : 0000FFFFh</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; 000A0000h&nbsp;&nbsp;&nbsp;
+&brvbar;______base_____&brvbar; 240 : 00000000</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;&nbsp;&nbsp;&nbsp; M&eacute;moire&nbsp;&nbsp;&nbsp; &brvbar;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&brvbar;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; 00000000h&nbsp;&nbsp;&nbsp;
++---------------+</TT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Le segment 240h me permet donc d'adresser
+la zone m&eacute;moire de 000A0000h &agrave; 000AFFFFh (64 ko de limit).</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>(Il faut noter que tout les descripteurs
+sont rang&eacute;s dans 2 tables la GDT et la LDT. Il est possible de g&eacute;rer
+jusqu'a 16384 s&eacute;lecteurs. Dans la mesure o&ugrave; je ne tiens pas
+a faire du flat</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>Realmode, n'en d&eacute;plaise &agrave; certains,
+je n'expliquerais pas la structure de ces tables (En plus c long j'ai pas
+que ca &agrave; foutre))</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Les droits peuvent vous para&icirc;tre idiot
+mais ils sont l&agrave; dans un but pr&eacute;cis : Souvenez vous le gars
+de chez intel qui voulait faire du multitache, et ben la paf bingo.</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>Imaginez que vous vouliez faire tourner plusieurs
+programmes en&nbsp; m&eacute;moire et bien un systeme Multi "Grosses" t&acirc;ches
+va allouez a chaque programme des descripteurs pour son code et ses donn&eacute;s.
+Mais chaque programme n'a pas le droits aux m&ecirc;mes choses qu'un autre.
+C'est l&agrave; que le fameux nivo de privil&egrave;ge entre en jeux :</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>On distingue 4 types de codes et donn&eacute;es
+execut&eacute;s par le syst&egrave;me:</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; - Le Noyau (Kernel)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; - Routines et donn&eacute;es
+syst&egrave;mes</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; - Services syst&egrave;me (une
+routine d'interruption par ex)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; - Applications</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Et bien chacun de ses &eacute;l&eacute;ment
+&agrave; un niveau de privil&egrave;ge diff&eacute;rent:</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>Ex: - Seul le noyau peut modifier la table
+des decripteurs</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; - Une application ne peut
+ecrire dans le segment de donn&eacute;es</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; systemes</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp; - etc...</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Bien entendu des mecs se cassent les couilles
+pour faire un truc &agrave; peu pr&egrave;s potable ki marche, et voila
+que des gros bourrins cassent tout (cf Windaube 95)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT><U>4 - Compatibilit&eacute; 16/32 bits</U></TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Le mode prot&eacute;g&eacute; semble bien
+jolie mais y'a tout de m&ecirc;me comme un leger probleme. Le syst&egrave;me
+d'exploitation DOS &agrave; &eacute;t&eacute; &eacute;crit pour le mode
+r&eacute;el, y'a donc pas moyen d'avoir acc&eacute;s aux fonctions syst&egrave;mes
+(essayez d'appeler l'int 21h en mode prot&eacute;g&eacute; vous verrez
+c rigolo)</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>C'est alors que d&eacute;barqu&egrave;rent
+les DOS - EXTENDERS (non de zeus mais qu'est-ce ????)</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Un Dos extender permet de faire tourner un
+programme 32 bits sous DOS en &eacute;vitant les inconv&eacute;nients du
+modep. On peut prendre le cas, un peu sp&eacute;cial, de DOS4GW (voir aussi
+PMODEW ou DOS32)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>Ce dernier se trouve en m&eacute;moire lorsque
+un programme DOS 32 bits est lanc&eacute;. Il va alors permettre un support
+quasi complet d'un syst&egrave;me d'exploitation. Par exemple si votre
+prog fait appel &agrave; l'int 21h Dos4g executera sa propre int 21h ecrite
+pour le mode prot&eacute;g&eacute;. Cependant certaines int ne peuvent
+&ecirc;tre &eacute;xecuter en Modep (Ex: Les fonctions BIOS pout des raisons
+&eacute;videntes) dans ce cas la dos4g va refaire passer le processeur
+en mode r&eacute;el, &eacute;xecuter l'int</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>et revenir en mode prot&eacute;g&eacute;
+(C un peu lourd mais bien utile)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT><U>5 - Le DPMI</U></TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Au lancement d'un programme, DOS4GW (ou PMODEW)
+initialise les segments de la facon suivante:</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; ES = DS = SS (?) = CS (?) = segment
+de code + donn&eacute;es</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>Ce qu'a fait le dos extender, c'est qu'il
+a cr&eacute;e un selecteur pour&nbsp; le code et les donn&eacute;es et
+il lui file les attributs suivant :</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; Base address : 0</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; Limit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: D&eacute;pend de la taille de votre programme</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; Droits&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Tous (Lecture / Ecriture)</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Ce qui est bien joli mais un petit peu dangereux
+quand on fait pas gaffe : Toute la zone de m&eacute;moire contenant le
+noyau est totalement d&eacute;prot&eacute;g&eacute;, il vous est donc possible
+d'&eacute;craser ce que bon vous semble (huh huh c rigolo ca fait tout
+casser .....)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>Cependant c bien joli mais comment fait on
+pour modifier la taille de ces segments, ou comment allouez de nouveaux
+selecteurs ???</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Vous pouvez le faire en bidouillant la table
+des descripteurs (Franchement faut vraiment se faire chier &agrave; ce
+niveau) ou alors passer par l'interface DPMI (Dos Protected Mode Interface)
+qui est</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&agrave; votre disposition. Cette derni&egrave;re
+est appel&eacute;e par l'int 31h et met en oeuvre toute les fonctions n&eacute;cessaire
+&agrave; la manipulation de segments et autres choses en modep (voir n'importe
+quel programme genre DOSINT pour les references de l'int 31h)</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT><U>6 - Interruptions</U></TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Il existe 2 types d'interruptions avec un
+Dos extender :</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; - L'interruption en Mode r&eacute;el</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; - L'interruption en Mode prot&eacute;g&eacute;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>Comment est fait la distinction :</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><TT><FONT COLOR="#FFFFFF">En mode r&eacute;el chaque int poss&egrave;de
+une adresse, toutes r&eacute;pertori&eacute;s dans la table des vecteurs
+d'interruptions.</FONT></TT><FONT COLOR="#FFFFFF"></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>En mode prot&eacute;g&eacute; cette table
+est remplac&eacute; par l'IDT (Interrupt Descriptor Table) qui va contenir
+des descripteurs pour chaque routine.</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>L'interruption en mode r&eacute;el ne peut
+&ecirc;tre appel&eacute; qu'explicitement. Pour cela il faut passer par
+un service de l'int 31h servant &agrave;&nbsp; simuler un appel d'interruption
+en mode r&eacute;el.(Ex: les services</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>VESA doivent &ecirc;tre appel&eacute; en
+mode r&eacute;el)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>L'interruption en mode prot&eacute;g&eacute;
+est appel&eacute; comme en mode r&eacute;el Ainsi, par exemple, tout service
+materiel IRQ GUS/SB peut &ecirc;tre&nbsp; d&eacute;clench&eacute; en modep.</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT><U>Ex :</U></TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; NewIRQSB:</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pushad</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; push
+ds</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov ax,DGROUP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; Si vous utilis&eacute; des donn&eacute;es</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov
+ds,ax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; Pensez &agrave; recharger le descripteur</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; dans DS</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov al,20h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; Acquitte le 8259</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; out
+20h,al</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pop ds</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; popad</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; iretd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; iretd d&eacute;pile les flags et l'adresse</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; de retour far CS:EIP</TT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Ces handlers doivent &ecirc;tre install&eacute;
+par l'int 21h. Le dos extender utilisera ses propres routines pour remplir
+l'IDT. Les fonctions 35h et 25h fonctionnent de mani&egrave;re transparente
+comme sous DOS.</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; mov ah,35h</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; mov al,[Intnum]</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; int 21h</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; mov [AncIntSel],es&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; Sauvegarde le selecteur et</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; mov [AncIntOff],ebx&nbsp;&nbsp;&nbsp;&nbsp;
+; L'offset de l'ancienne routine</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; mov ah,25h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; Installe la nouvelle</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; mov al,[Intnum]</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; push cs&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; DS contient le selecteur</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; pop ds&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; pour le code DS = CS</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; mov edx,offset NewIRQSB
+; EDX = offset de la routine dans le</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; s&eacute;gment</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; int 21h</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; ...</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; ...</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Il est possible d'installer deux handlers
+pour la m&eacute;me int : un en mode r&eacute;el l'autre en modep (c ce
+k'on appel bimodal interrupt) J'en ai jamais vu l'int&eacute;ret mais dans
+ce cas il faut modifier le fichier STUB.C qui sera &eacute;xecuter avant
+le chargement de DOS4G (en mode r&eacute;el) Pour plus d'info la dessus
+voir les FAQS du watcom.</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>(NdArraKis: Je pense que ce doit &ecirc;tre
+utile pour le cas d'un handler Keyboard qui sera appel&eacute; en mode
+prot&eacute;g&eacute; - normale - mais qui doit aussi &ecirc;tre appel&eacute;
+en mode r&eacute;el, par exemple lors de l'appui sur une touche durant
+le chargement sur disk...D'ailleurs, si vous avez des infos sur ce point,
+je suis preneur...</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>Pour le Mag, je ne suis pas cass&eacute;
+la t&ecirc;te, je d&eacute;sactive le clavier avant tout chargement sur
+disk, &ccedil;a &eacute;vite bien des probl&egrave;mes ...)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT><U>7 - Les erreurs</U></TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>AHHHHHHHHH le domaine de pr&eacute;dilection
+de Micro..ft (Pas de pub :))</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>A partir du 80386 le processeur est capable
+de g&eacute;n&eacute;rer des exceptions. Une exception intervient lorsque
+vous faite quelque chose que le processeur ne peut ou ne veut pas faire.</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>Ex : Danser tous nu "oune doche treche, qui
+c'est qui va se taper Maria ?" ou encore faire croire que windaube marche
+bien et que tout va pour le mieux dans le meilleur des mondes (Vous pouvez
+pas savoir &agrave; quel point ca l'emmerde)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>C'est ce qu'il va se passer si vous tentez
+de lire un segment ou vous n'avez aucun droit en lecture, opcode inconnu,
+etc ......</TT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT><U>8 - Ouf</U></TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><TT><FONT COLOR="#FFFFFF">&nbsp;&nbsp; Voila sommairement les bases
+du fonctionnement d'un prog DOS 32 bits. Bien entendu le mode prot&eacute;g&eacute;
+du 80386 est hachement plus compliqu&eacute; mais ces quelques notions
+devraient suffir pour que vous compreniez ce que vous faites.</FONT></TT><FONT COLOR="#FFFFFF"></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; Si le fonctionnement du CPU vous
+interesse, je vous conseille tr&egrave;s fortement un document 386INTEL.TXT
+que vous trouverez sur tout bon x2ftp.oulu.fi et autre ftp.cdrom.com .
+Ce fichier est la doc technik du processeur 386, avis aux amateurs....</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+EgoN</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(Voir le coup de geule qui suit)</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Note : peut &ecirc;tre que certains trouvent
+ca rigolo de parler de trucs "pipo" et estiment &ecirc;tre des brutes de
+programmation (chose que je ne revendique pas personnellement) mais pour
+l'instant les rares compos francaises que j'ai vu dernierement m'ont plut&ocirc;t
+fait mourir de rire : (NdArraKiS: t'as pas les trucs de la Wired97!)</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; - Effets 3d "r&eacute;chauff&eacute;"</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; - Plantage une fois sur 2 pour
+des raisons inconnus</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; - Installation monstrueuse de
+plusieurs 10aines de fichiers.</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; - D&eacute;mos qui ne d&eacute;marre
+pas !!!!!! (tr&eacute;s fort)</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp; - Impossible de sortir par ESC
+parcequ'y faut absolument</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp; se la taper en entier
+!!!!! (atroce .....)</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Pour faire des bidules en 3d qui tournent
+et qui bougent y'a du monde vazy que j'te fait du gouraud machin du lissage
+bidule ...</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>Pour citer un exemple les auteurs de "MOMENT
+2" auraient pu s'abstenir ou au moins faire un petit effort :</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>(NdArraKiS: ouais, mais il regrette, pis
+t'y connais rien, il utilise le DAFB (D&eacute;mo Assist&eacute; par Fichier
+Batchs)&nbsp; =:) )</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>Downloader 600 ko (ZIPPE !!!!) pour des merdes
+pareils ca me fout&nbsp; les boules alors que des types font des trucs
+hyper sensationnel&nbsp; en 30 Ko !!!!!!!!!</TT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><TT>J'suis pas un hyper bon coder mais la franchement
+c'est n'importe quoi !!! Bon j'vous laisse chuis aigris ..........</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+EgoN (qui va se jeter du RdC</TT></FONT>
+<BR><FONT COLOR="#FFFFFF"><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+si personne ne fait rien .......</TT></FONT>
+<BR><TT><FONT COLOR="#FFFFFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+AAAAHHHHHHH .............)</FONT></TT><FONT COLOR="#FFFFFF"></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT></UL>
+</UL>
+</UL>
+
+</BODY>
+</HTML>

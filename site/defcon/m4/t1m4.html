@@ -1,0 +1,291 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.02 [en] (Win95; I) [Netscape]">
+   <META NAME="Author" CONTENT="Doctor Yes">
+   <TITLE>Defcon - Webmaster : Dr Yes</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#000000" LINK="#FFFFFF" VLINK="#551A8B" ALINK="#FF0000" BACKGROUND="/defcon/bord.jpg" NOSAVE>
+
+<UL>
+<UL>
+<UL><FONT COLOR="#FF0000"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Ma vie chez les SPARCS (tm)</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Les vacances
+sont l'&eacute;poque id&eacute;ale pour voyager et conna&icirc;tre de nouvelles
+personnes, personnellement, j'ai &eacute;t&eacute; en Sparcland, et je
+me suis fait des copains.</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Les SPARCS
+sont des processeurs &eacute;quipant les SUN, comme le SPARC 5,10,20...
+et probablement les ULTRA-SPARC.</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Il s'agit de
+processeurs RISC 32bits, &agrave; architecture load/store, c'est &agrave;
+dire qu'il n'y &agrave; pas d'instruction du type "add [variable], 42",
+au lieu de ca tous les acc&egrave;s m&eacute;moires passent par les instructions
+load et store, ce qui donne ca:</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>(%r est la
+syntaxe d'un registre)</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ld [variable], %r</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+add %r, 42, %r</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+st %r, [variable]</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Ce n'est pas
+vraiment g&eacute;nant, car le processeur poss&egrave;de 32 registres entiers,
+%r0 a %r31, ou encore:</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+%g0&nbsp;&nbsp;&nbsp;&nbsp; (= %r0)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: toujours a 0</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+%g1-%g7 (= %r1-%r7)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : registres
+globaux</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+%o0-%o5 (= %r8-%r13)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : registres locaux,
+ou param&egrave;tres</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+%sp&nbsp;&nbsp;&nbsp;&nbsp; (=%r14 =%o6)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: stack pointer</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+%o7&nbsp;&nbsp;&nbsp;&nbsp; (=%r15)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: adresse d'appel (de la routine qui va</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&ecirc;tre appel&eacute;e)</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+%l0-%l7 (=%r16-%r23)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : variables
+locales</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+%i0-%i5 (=%r24-%r29)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : arguments
+d'un call</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+%fp&nbsp;&nbsp; (=%r30 =%i6)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: "Frame pointer" &lt;- equivalent de (e)bp</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+chez Intel</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+%i7&nbsp;&nbsp; (%r31)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: retour d'appel (de la routine actuelle)</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Meme en oubliant
+%g0, %o7, %i7, %fp, et %sp, ca en fait des registres... (soupir reveur)</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Je reviendrai
+sur %o7 et %i7.</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Les instructions
+se pr&eacute;sentent sous cette forme:</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+add %o0, %o1, %l0&nbsp; => l0 = o0 + o1</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+sub %o0, %o1, %l1&nbsp; => l1 = o0 - o1</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Elles sont
+g&eacute;n&eacute;ralement en double, suivant qu'elle mettent &agrave;
+jour les flags (et finissent pas "cc"):</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+add reg, regim, reg / addcc reg, regim, reg</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+sub reg, regim, reg / subcc reg, regim, reg</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Les instructions
+de saut sont des "branch", comme "ba": branch always, "bn": branch never,
+"bl": branch on less, "ble": on less or equal, "blu": on less Unisgned,
+"bcs": on C=1...</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Mais!!! Il
+n'y a pas d'instruction multiplication, ni division enti&egrave;re !!!</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>A la place,
+de la multiplication, on a droit a une instruction "mulscc", qu'il faut
+effectuer 32 fois de suite...&nbsp; De plus, elle utilise un registre special:
+%y</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Par exemple,
+pour faire 3*5, avec 3 dans %o2 et 5 dans %0:</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+mov 3, %o2</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+mov 5, %o0</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+mov %o0, %y</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+nop&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ! commentaire: je sais pas pourquoi les
+trois nop... (NdWbm:Pour refroidir peut &ecirc;tre ;))</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+nop</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+nop</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+andcc %g0, %g0, %o1&nbsp;&nbsp; ! %g0 est special et vaut toujours 0</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+mulscc %o1, %o2, %o1&nbsp;&nbsp;&nbsp; ... encore 31 fois de suite</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+mov %y, %o0 ! resultat dans %o0</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Pour la division,
+il n'y a meme PAS de "divscc", il faut tout faire a la main. Dans les progs,
+il est carr&eacute;ment fait appel a un call, call .mul, et call .div .....&nbsp;
+Aaargh (cri de desespoir)</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Le SPARC ne
+poss&egrave;de pas de multiplication enti&egrave;re, mais il dispose de
+32 registres flottants, et est conforme aux sp&eacute;cifications IEEE
+754. (ouf)</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>L'assembleur
+SPARC propose des instructions call et ret, qui sont converties ainsi:</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+"call %o0"&nbsp; devient&nbsp;&nbsp;&nbsp;&nbsp; jmpl %o0, %o7</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+"ret"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; devient&nbsp;&nbsp;&nbsp;&nbsp;
+jmpl %i7+8, %g0</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>D'ou l'usage
+reserve de %o7 et %i7.</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Encore un truc
+marrant, le processeur est "pipelined", et il execute deux instructions,
+on voit alors souvent ca:</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ret</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+restore&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+! &lt;- restaure les registres</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Par contre
+cela implique des nop apres les sauts,&nbsp; du genre:</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+call subr</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+nop</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Deux registres
+sont utilis&eacute;s pour pointer sur "l'instruction courante": le pc "program
+counter" ((e)ip chez Intel), et %npc "next program counter".</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Toutes les
+instructions font 32bits, et sont divis&eacute;es en trois classes:</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+- le call ("format one instruction")</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+npc = (instruction[29:0] &lt;&lt; 2) + pc</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+- les branch et sethi ("format two instruction")</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+pour les sauts, le deplacement est sur 22 bits</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>sethi est l'instruction
+qui permet de charger les 22 bits hauts d'un registre, ce qui sert a initialiser
+un registre avec une valeur imm&eacute;diate sur 32 bits, en le combinant
+avec un "or":</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+sethi 0x30cf0034 >> 10, %o0</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+or %o0, 0x30cf0034 &amp; 0x3ff, %o0</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>- les autres
+("format three instruction"), dans ce format, une valeur imm&eacute;diate
+est cod&eacute;e sur 13 bits, d'o&ugrave; le "sethi". On y trouve les add,
+xor, ld (load)...</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Le SPARC ne
+dispose pas d'instruction in/out, les entr&eacute;es/sorties sont mapp&eacute;es
+en m&eacute;moire, entre l'adresse 0xfff00000 et 0xffffe000, un prog commence
+en 0x2000 et finit en 0xf8000000.</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Mais il s'agit
+d'espace memoire virtuelle, sur 32 bits, la m&eacute;moire physique &eacute;tant
+sur 36 bits, avec des pages de 4 Kilo a 4 Giga. La MMU g&egrave;re une
+table des pages, avec, pour chaque entr&eacute;e le PPN (Physical Page
+Number), des droits d'acces (user/superviser, read-only/read-write), et
+des flags (cachable, modifiee).</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>L'adresse physique
+est obtenue en faisant un "or" sur le PPN et l'adresse virtuelle:</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;- PPN -24bits -></FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp; OR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;---- memoire virtuelle --></FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;- memoire physique -------36bits--00></FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Le PPN doit
+donc avoir les bits en commun avec la m&eacute;moire virtuelle &agrave;
+0, plus la page est grosse, moins il y a de PPN, et inversement.</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>En conclusion,
+l'architecture SPARC est tres proche de l'architecture MIPS, sauf que le
+MIPS il a des mul et div (ca fait pas risc ca...), qu'il n'a pas d'instruction
+"cmp", mais des "slt"</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>(set less
+than ). MIPS signifie d'ailleurs "MicroProcessor without Interlocked Pipelined
+Stage", c'est a dire, que l'instruction load n'est pas blocante si l'instruction
+qui suit utilise le contenu du</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>registre charg&eacute;...
+(des nop en perspective ;)</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>En resume,
+plusieurs choses m'ont &eacute;pat&eacute;, chez les SPARCS,l'absence de
+div, de mul, le nombre d'instruction (il y en a quand m&ecirc;me beaucoup),
+le pipeline, et surtout la "propret&eacute;" des instructions (tout sur
+4 octets). Peut-&ecirc;tre de bonne perspectves pour Merced..</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Je tiens quand
+m&ecirc;me a pr&eacute;ciser que je n'ai jamais programm&eacute; en assembleur
+SPARC, (juste quelques gdb), et que ma source d'inspiration est un excellent
+bouquin, de Richard P. Paul:</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>"Sparc Architecture,
+Assembly Language Programming, &amp; C."</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+aLgoL / Psykotrope</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Je ne sais
+pas s'il faut le dire, mais,</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>SPARC est
+un registred trademark de SPARC International,</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Unix est un
+registred trademark d'AT&amp;T Bell Laboratories,</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>DefCoN est
+un registred trademark de K!Prods.</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT></UL>
+</UL>
+</UL>
+
+</BODY>
+</HTML>

@@ -1,0 +1,377 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.02 [en] (Win95; I) [Netscape]">
+   <META NAME="Author" CONTENT="Doctor Yes">
+   <TITLE>Defcon - Webmaster : Dr Yes</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#000000" LINK="#FFFFFF" VLINK="#551A8B" ALINK="#FF0000" BACKGROUND="/defcon/bord.jpg" NOSAVE>
+
+<UL>
+<UL>
+<UL><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Je me demandais
+ce que j'allais faire pour ce cours ASM, et comme je suis loin d'&ecirc;tre
+une brute de l'assembleur pur (la derni&egrave;re fois que j'ai fait un
+prog cent pour cent en ASM, c'etait de l'ASM</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Z80!) je me
+suis dis qu'une initiation avec un exemple a l'appui irait tres bien. Et
+comme c'est plus interressant de voir ce que l'on fait, j'ai opt&eacute;
+pour un 'fire on the screen', classique mais</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>toujours chouette
+! Je vais donc vous expliquer un peu comment ca marche ...&nbsp; Le source
+devrait &ecirc;tre disponible quelques part ...</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><U><FONT FACE="Verdana"><FONT SIZE=-1>I] La m&eacute;moire
+en mode r&eacute;el</FONT></FONT></U></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>La m&eacute;moire
+en mode r&eacute;el se d&eacute;coupe en segments de 64Ko, les dix premiers
+sont r&eacute;serv&eacute;s &agrave; la RAM de la m&eacute;moire centrale
+dont la taille est donc limit&eacute;e a 640Ko. A la suite de la RAM se
+trouve un segment de m&eacute;moire A (10 en hexa) qui appartient &agrave;
+la carte graphique et qui m&eacute;morise le contenu de l'&eacute;cran.
+Les segments suivants sont r&eacute;serv&eacute;s soit pour une carte monochrome,
+soit pour le BIOS. Chaque segment est lui-m&ecirc;me adress&eacute; par
+un offset.</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>En r&eacute;sum&eacute;,
+nous avons 16bits pour le segment puis 16 bits pour l'offset, soit 32 bits
+qui nous permettent d'adresser 1Mo!!!</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Zarb'ca! 1Mo=2^20
+octets!!! Mais ou sont pass&eacute;s les 12 autres !!!</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Because avant
+le 8080, le registres d'adresse avait 16 bits (donc 65536 unit&eacute;s
+soit 64Ko. A l'&eacute;poque ils voulait pouvoir g&eacute;rer 16 fois plus
+de RAM, ils leur fallait un registre d'adresse de</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>20bits...
+mais voila, &agrave; l'&eacute;poque c'&eacute;tait pas vraiment &eacute;vident
+...</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Alors, ils
+ont fait comme d'hab', ils ont trouv&eacute; l'astuce qui tue!</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Le 8088 ne
+dispose plus d'un registre d'adresse sp&eacute;cialis&eacute;. A chaque
+acc&egrave;s en m&eacute;moire, il compose l'adresse 20 bits en combinant
+deux nombres 16bits.</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Mais comment
+ils font ca les bougres !!!!!</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>En fait, c'est
+pas tr&egrave;s compliqu&eacute;, le segment est d&eacute;cal&eacute; de
+4 bits sur la gauche, puis l'offset lui est additionn&eacute;: ce qui nous
+fait bien 20 bits en tout (16+4). Donc si on ajoute 1 au segment, cela
+revient &agrave; ajouter 16 &agrave; l'offset (avec le d&eacute;calage
+de 4: 1*2^4).</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Donc pour adresser
+la m&eacute;moire il faut un Segment et un offset. Et comme nous l'avons
+vu plus haut la video se situe en 0A000h.</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><U><FONT FACE="Verdana"><FONT SIZE=-1>II] Enclenchons
+d&eacute;j&agrave; un mode graphique sympa: le mode 13h</FONT></FONT></U></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Tout d'abord
+nous allons enclencher le mode 13h (320x200x256) car sa gestion est des
+plus simple, pour cela il suffit d'appeler la fonction 0 ( dans AH ) de
+l'interruption 10h avec le numero du mode dans AL:</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Mov AX,0013h</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+INT 10h</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Oulala, komment
+il a fait &ccedil;a ??? Bon, c'est vrai que ces registres peuvent para&icirc;tre
+un peu chiant au premier abord mais en fa&icirc;t, c'est des plus simple.
+Les registres de donn&eacute;es sont batis de la fa&ccedil;on suivante:
+Deux registres 8 bits forment un registre 16 bits, et 16 bits + 16 bits
+= 32 bits ...</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Enfin presque
+... prenons un exemple, &ccedil;a sera plus simple ...</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Bon, AH et
+AL se rassemble en AX, ainsi si AH=12h et AL=34h et</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>bien AX=1234h
+... jusque la tout va bien ...</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Mais, les
+registres 32 bits ne se d&eacute;coupe pas en deux registres 16 bits mais
+en UN registre 16 bits ... Zarb'Ca!</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+EAX&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ??&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AX&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp; ??&nbsp; |&nbsp; ??&nbsp; |&nbsp; AH&nbsp; |&nbsp;
+AL&nbsp; | (NdWm: Chiant en HTML de base ca !)</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Vous pouvez
+bien entendu vous servir de la partie haute de EAX, mais indirectement
+avec les d&eacute;calages par exemples (SHL et SHR) Ainsi, pour mettre
+1234h dans la partie haute de EAX:</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+OR&nbsp; EAX,12340000h</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ou&nbsp;&nbsp;&nbsp; MOV AX,1234h</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+SHL EAX,16</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><U><FONT FACE="Verdana"><FONT SIZE=-1>III] Mais
+comment s'est-y-que ca marche ?</FONT></FONT></U></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Bon, alors
+c'est bien beau d'enclencher un mode graphique mais encore faut il savoir
+le g&eacute;rer. Mais vous allez voir comme c'est simple: c'est un mode
+lin&eacute;aire c'est &agrave; dire que de l'adresse 0 a</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>319 se trouve
+les 320 pixels de la premi&egrave;re ligne, de 320 &agrave; 639 les 320
+pixels de la deuxi&egrave;me ligne, etc...</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Donc pour
+poser un point aux coordonn&eacute;es (x,y), il suffit de le poser &agrave;
+l'offset:</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp; offset=x+y*320
+dans le segment vid&eacute;o:&nbsp;&nbsp;&nbsp; [0A000h:x+y*320]</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;
+MOV AX,0A000h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; On charge le Segment Video</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;
+MOV ES,AX&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; dans le Registre ES</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Donc pour adresser,
+il suffit de charger le segment vid&eacute;o dans un registre de Segment(ES
+par ex). Mais on ne peut pas le faire directement, il faut charger le segment
+dans un registre de</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>donn&eacute;es
+puis copier ce registre dans le registre de segment.</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Il faut ensuite
+calculer l'offset, le charger dans un registre de donn&eacute;es (DI par
+ex) et poser un octet ayant pour valeur le num&eacute;ro du stylo du pixel
+que l'on veut afficher.</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><U><FONT FACE="Verdana"><FONT SIZE=-1>IV] D&icirc;tes,
+on peut avoir des couleurs ?</FONT></FONT></U></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Nous verrons
+le d&eacute;tail du feu plus loin, passons maintenant au changement de
+couleur. Pour que le feu rende bien, il faut que les couleurs soient bien
+rang&eacute;es en d&eacute;grad&eacute;. Le changement de</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>couleur des
+stylos est tr&egrave;s simple, il faut envoyer sur le port 3C8h (gr&acirc;ce
+&agrave; l'instruction OUT) le num&eacute;ro du stylo dont on veut changer
+la couleur, puis d'envoyer sur le port 3C9h ( OUT ) les</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>composantes
+Rouge, Vert, Bleu de la couleur. Petit d&eacute;tail, les composantes varient
+de 0 &agrave; 63, nous disposons donc de 64*64*64=262144 couleurs diff&eacute;rentes
+avec une simple carte VGA.</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>De plus, il
+n'est pas n&eacute;cessaire de r&eacute;enclencher le num&eacute;ro du
+stylo suivant, en envoyant trois nouvelles composantes R,V,B, le controleur
+comprend qu'il s'agit des composantes de la couleur</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>du stylo suivant.</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;
+Mov DX,3C8h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; adresse du controleur</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;
+Mov AL,255&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; on va changer
+la col du stylo No255</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;
+Out DX,AL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; on selectionne
+le stylo</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;
+Inc DX&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; DX = 3C9h</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;
+Mov AL,45&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; Composante
+Rouge = 45</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;
+Out DX,AL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; on envoie
+au controleur</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;
+Mov AL,18&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; Composante
+Vert = 18</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;
+Out DX,AL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; on envoie
+au controleur</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;
+Mov AL,22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; Composante
+Bleu = 22</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;
+Out DX,AL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; on envoie
+au controleur</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><U><FONT FACE="Verdana"><FONT SIZE=-1>V] La Synchronisation
+Vertival, bon sang mais c'est bien sur!</FONT></FONT></U></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Pour que le
+feu (ca vient ...) soit fluide, nous allons nous synchroniser sur le canon
+&agrave; &eacute;lectrons: Si on met &agrave; jour le feu &agrave; l'&eacute;cran
+alors que le canon &agrave; &eacute;lectrons est en train d'afficher</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>l'image d'avant,
+on va rencontrer la synchro, c'est &agrave; dire que nous verrons le d&eacute;but
+de l'image d'avant et la fin de la nouvelle image introduisant ainsi une
+fracture (social?) entre le haut et</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>le bas de
+l'&eacute;cran. Pour &eacute;viter cela, nous allons d'abord attendre la
+fin de l'affichage puis le d&eacute;but de l'affichage pour &ecirc;tre
+certain que l'image pr&eacute;c&eacute;dente a &eacute;t&eacute; totalement
+affich&eacute;e et seulement alors nous afficherons la nouvelle image.
+Tout ce passe sur le port 3DAh du CRTC. (lecture garce a l'intruction IN)</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Mov DX,3DAh&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; On charge le numero du port</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+VSync1:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; du CRTC</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+In AL,DX&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; On lit sa valeur</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Test AL,8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; Le bit No4 y est-il ?</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Jnz VSync1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; Oui! On recommence !</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;
+VSync2:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; Non! On continue...</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+In AL,DX&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; On lit sa valeur</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Test AL,8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; Le bit No4 y est-il ?</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Jz Vsync2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; Non! On recommence!</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Donc pour notre
+feu (NTous: enfin!!!), nous allons travailler dans un buffer et n'acceder
+&agrave; cette derni&egrave;re que pour poser le pixel. En effet, la m&eacute;moire
+vid&eacute;o n'est pas des plus rapides et comme</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>nous allons
+faire huit acc&egrave;s en lecture, cela risqurait de p&eacute;daler m&ecirc;me
+sur une grosse b&eacute;cane.</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><U><FONT FACE="Verdana"><FONT SIZE=-1>VI] Description
+de l'effet le plus compliqu&eacute; de la Demosc&egrave;ne !!!</FONT></FONT></U></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>En fait, nous
+allons r&eacute;aliser un smooth, c'est &agrave; dire une moyenne des points
+mais au lieu de reposer la moyenne au centre, nous allons la reposer juste
+au dessus:</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>2 0 2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2 2 2</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>3 1 3&nbsp;&nbsp;&nbsp;
+( 2+2 + 3+1+3 + 2+3+2 ) /8 = 2,25&nbsp; => 2&nbsp;&nbsp;&nbsp;&nbsp; 3
+1 3</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>2 3 2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2 3 2</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Et ainsi de
+suite pour chaque point, or comme la palette est intelligemment rang&eacute;e,
+les couleurs sont de plus en plus sombres plus leur num&eacute;ro diminue,
+cela donne un effet de d&eacute;grad&eacute; vers le</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>noir en montant.
+Vous allez me dire 'Et c'est tout ?' ... et bien nan! il faut encore g&eacute;n&eacute;rer
+le feu proprement dit! Pour cela, il faut des points de niveau de couleur
+diff&eacute;rent pos&eacute;s de facons</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>al&eacute;atoire
+a l'&eacute;cran et ainsi entretenir le feu. Et la, je dois dire que pour
+g&eacute;n&eacute;rer des nombres al&eacute;atoires (hum hum) qui rendent
+bien &agrave; l'&eacute;cran assez&nbsp; rapidement n'a pas &eacute;t&eacute;
+une mince affaire,</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>mais heureusement
+j'ai eu beucoup de chance. Je suis en fa&icirc;t parti d'une procedure
+diffus&eacute;e par Jare/Iguana mais ca rendait tr&egrave;s mal sur mon
+foutu feu! Alors, comme Mr Chance passait par l&agrave; ...</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+Xor CL,CL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; CL=0 => 256 it&eacute;rations</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp; merdes:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; On va aff des cacas (cach&eacute;es)</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+Mov DI,Rand&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; Je recup' la derni&egrave;re valeur</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+Add DI,1000100010001000b&nbsp; ; La val que j'ADD n'est QUE belle</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+Ror DI,3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; en binaire, puis je ROTE tout ca</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+Mov AX,DI&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; on sauvegarde la valeur dans AX</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+And DI,511&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; et on ram&egrave;ne ca &agrave; une valeur</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+Sub DI,512-320&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; comprise entre 0 et 1280 (320*4)</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+Shl DI,2</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+Add AX,1100000011000000b&nbsp; ; Celle la aussi elle est jolie...</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+RoR AX,3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; c'est pas jolie tout ca ???</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+Mov Rand,AX&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; on sauve la derni&egrave;re valeur</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+or&nbsp; al,00000111b&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; al toujours > 15</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+mov ah,al&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; on va poser 2 fois la meme col</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+Mov [64000+BX+DI],ax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; c'est fait (&agrave;
+ES:[BX+64000+DI])</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+Dec CL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; BX=buf, 64000=> hors de l'&eacute;cran</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;
+Jnz merdes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; DI=adresse al&eacute;atoires (hum???)</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Une fois qu'on
+a attendu le d&eacute;but de la synchro, que les couleurs tir&eacute;es
+al&eacute;atoirement sont pos&eacute;es al&eacute;atoirement &agrave; l'&eacute;cran,
+on peut alors faire notre 'smooth montant' et tout recommencer ....</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>Et voila !</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Arrak&iexcl;S</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Ki en a un peu marre</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+de la mise en page!</FONT></FONT></FONT><FONT COLOR="#FFFFFF"></FONT>
+
+<P><FONT COLOR="#FFFFFF"><FONT FACE="Verdana"><FONT SIZE=-1>(nbwm : Et
+Dr Yes qui se la tape en HTML la mise en page!!! :-))</FONT></FONT></FONT>
+<BR><FONT COLOR="#FFFFFF">&nbsp;</FONT></UL>
+</UL>
+</UL>
+
+</BODY>
+</HTML>
