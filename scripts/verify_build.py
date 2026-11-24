@@ -71,7 +71,7 @@ def main(argv=None):
             continue
         text = rd(build / rel)
         body = REMOVAL.sub("", text)
-        body = re.sub(r"(?i)\b(?:(?:login|toto)@citeweb\.net|(?:tech|web|plaintes|pub|webmaster|webmestr|beta)@(?:[a-z]+\.)?(?:citeweb\.net|ftd\.fr))\b", "", body)  # example and role addresses
+        body = re.sub(r"(?i)\b(?:(?:login|toto)@citeweb\.net|arrakis@hol\.fr|dake@omedia\.ch|wolf-rayet@hotmail\.com|(?:tech|web|plaintes|pub|webmaster|webmestr|beta)@(?:[a-z]+\.)?(?:citeweb\.net|ftd\.fr))\b", "", body)  # example, role and nick addresses
         for label, rx in LEFTOVERS:
             if rx.search(body):
                 hits.setdefault(label, []).append(rel)

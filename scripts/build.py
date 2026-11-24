@@ -81,6 +81,9 @@ def is_public_address(m):
     addr = m.group(0).lower()
     return addr in EXAMPLE_ADDRESSES or (m.group(1).lower() in ROLE_LOCALS and m.group(2).lower().endswith(ROLE_DOMAINS))
 
+SURNAME_LOCALS = {"meisburg", "cbouthor", "treguy"}
+# Nicks used as e-mail local parts: the address is shown in full (only family names get the domain masked).
+NICK_LOCALS = {"arrakis", "dake", "wolf-rayet", "wolf_rayet"}
 MEMBER_ENTRY = re.compile(r'(?is)liste des membres.*bgcolor="#C0C0C0"')  # real names in member lists
 
 REMOVAL_NOTE = (
@@ -126,6 +129,8 @@ SITE_CATEGORIES = [
 ]
 # External links never kept: counters, search engines, intranet host names, server scripts.
 EXTERNAL_DENY = re.compile(r"(?i)echo\.fr/estat-jump|/cgi-bin/|cgi/jump\.dll|hornet\.org/cgi")
+
+OJ_PAGES = {"credits", "links", "newjuice"}  # ojuice/e/<page> that exist in the OrangeJuice97 archive
 
 NOT_FOUND = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <html>
@@ -246,6 +251,10 @@ class Site:
         """Virtual path -> published URL or None."""
         v = v.lower()
         v = ALIASES.get(v, v)
+        if v.startswith("ojuice/e/"):
+            name = v.rsplit("/", 1)[-1].split(".")[0]
+            if name in OJ_PAGES:  # same page exists in the OrangeJuice97 archive
+                return OJ + name + ".htm"
         if v.startswith("ojuice"):
             return "/ojuice/"
         cands = [v]
@@ -444,10 +453,10 @@ class Site:
                 text = re.sub(r"(?is)(<body\b[^>]*>)", lambda m: m.group(1) + FORM_BANNER, text, count=1)
         # e-mails: mailto links removed by the link pass (kept as text), addresses masked
         text = re.sub(r"(?is)<a\b[^>]*href\s*=\s*\"?mailto:[^>]*>(.*?)</a\s*>", r"\1", text)
-        personal_mail = any(not is_public_address(m) for m in EMAIL.finditer(text))
+        personal_mail = any(m.group(1).lower() in SURNAME_LOCALS and not is_public_address(m) for m in EMAIL.finditer(text))
         if rel.startswith("automag/"):  # private classified ads: the whole address goes
             text = EMAIL.sub("????&#65312;????", text)
-        text = EMAIL.sub(lambda m: m.group(0) if is_public_address(m)
+        text = EMAIL.sub(lambda m: m.group(0) if is_public_address(m) or m.group(1).lower() in NICK_LOCALS
                          else m.group(1) + "&#65312;????", text)
         # phone numbers (private ads, the old publicity contact): masked
         text = PHONE.sub(lambda m: m.group(1) + ".??.??.??.??", text)
@@ -474,6 +483,9 @@ class Site:
             text = self._append(text, '<ul style="font:11px Verdana,Arial,sans-serif">%s</ul>' % items)
         if rel == "citeweb/index.htm":
             text = self._append(text, HOME_NOTE)
+        if rel.startswith("defcon/") and rel.endswith((".htm", ".html")) and re.search(r"(?i)<body\b", text):
+            text = re.sub(r"(?is)(<body\b[^>]*>)", r'\1<div id="page800" style="max-width:800px;margin:0 auto">', text, count=1)
+            text = self._append(text, "</div>")
         return text
 
     @staticmethod
