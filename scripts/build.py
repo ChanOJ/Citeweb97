@@ -58,11 +58,12 @@ ALIASES = {
 }
 
 NOTE_DEPT = " (not part of this archive)"
-REMOVAL_PAGES = {  # pages that list or describe people get the removal footer
-    "citeweb/contact.htm", "citeweb/sites.htm", "citeweb/sites.ctw.htm", "ribbon/index.htm",
-    "defcon/contact.html", "defcon/contacts.htm", "citemag/index.htm", "citemag/editos.htm",
-}
-REMOVAL_PREFIXES = ("membres/", "news/")  # member lists by login / by name, category lists
+# The removal footer goes only on pages that show a family name, a full postal address or an
+# e-mail with its local part in clear (local＠???? counts); never on pages with nicks only.
+POSTAL_PAGES = {"citeweb/contact.htm", "citeweb/contact.ctw.htm"}  # street address of the host company
+FAMILY_NAMES = re.compile(r"(?i)\b(?:retif|sauthier)\b")  # names written in running text
+EMAIL_CLEAR = re.compile(r"(?<![?])[A-Za-z0-9_.-]&#65312;\?\?\?\?")
+MEMBER_ENTRY = re.compile(r'(?is)liste des membres.*bgcolor="#C0C0C0"')  # real names in member lists
 
 REMOVAL_NOTE = (
     '<div id="removal-note" style="clear:both;margin:28px auto 8px;padding:6px 8px 0;width:60%;'
@@ -402,9 +403,8 @@ class Site:
             else:
                 text = '<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">\n' + text
         # footers
-        add_removal = rel in REMOVAL_PAGES or (rel.startswith(REMOVAL_PREFIXES) and rel.endswith(".htm") and "/index" not in rel[-12:] or rel in ("membres/mnom.ctw.htm",))
-        if rel.startswith(("membres/m", "news/")) and re.search(r"(?i)liste des membres", text):
-            add_removal = True
+        add_removal = bool(rel in POSTAL_PAGES or EMAIL_CLEAR.search(text) or FAMILY_NAMES.search(text)
+                           or MEMBER_ENTRY.search(text))
         if add_removal:
             text = self._append(text, REMOVAL_NOTE)
         if rel == "citeweb/index.htm":
