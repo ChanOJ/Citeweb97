@@ -62,7 +62,8 @@ NOTE_DEPT = " (not part of this archive)"
 # e-mail with its local part in clear (local＠???? counts); never on pages with nicks only.
 POSTAL_PAGES = {"citeweb/contact.htm", "citeweb/contact.ctw.htm"}  # street address of the host company
 FAMILY_NAMES = re.compile(r"(?i)\b(?:retif|sauthier)\b")  # names written in running text
-EMAIL_CLEAR = re.compile(r"(?<![?])[A-Za-z0-9_.-]&#65312;\?\?\?\?")
+# Addresses at citeweb.net (roles such as tech/webmaster, or members' pseudonymous logins) are not
+# personal data; any other address with its local part in clear counts.
 MEMBER_ENTRY = re.compile(r'(?is)liste des membres.*bgcolor="#C0C0C0"')  # real names in member lists
 
 REMOVAL_NOTE = (
@@ -387,6 +388,7 @@ class Site:
             text = re.sub(r"(?is)(<body\b[^>]*>)", lambda m: m.group(1) + FORM_BANNER, text, count=1)
         # e-mails: mailto links removed by the link pass (kept as text), addresses masked
         text = re.sub(r"(?is)<a\b[^>]*href\s*=\s*\"?mailto:[^>]*>(.*?)</a\s*>", r"\1", text)
+        personal_mail = any(not m.group(2).lower().endswith("citeweb.net") for m in EMAIL.finditer(text))
         if rel.startswith("automag/"):  # private classified ads: the whole address goes
             text = EMAIL.sub("????&#65312;????", text)
         text = EMAIL.sub(lambda m: m.group(1) + "&#65312;????", text)
@@ -403,7 +405,7 @@ class Site:
             else:
                 text = '<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">\n' + text
         # footers
-        add_removal = bool(rel in POSTAL_PAGES or EMAIL_CLEAR.search(text) or FAMILY_NAMES.search(text)
+        add_removal = bool(rel in POSTAL_PAGES or (personal_mail and not rel.startswith("automag/")) or FAMILY_NAMES.search(text)
                            or MEMBER_ENTRY.search(text))
         if add_removal:
             text = self._append(text, REMOVAL_NOTE)
